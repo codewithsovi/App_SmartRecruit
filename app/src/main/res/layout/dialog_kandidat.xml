@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/etNamaKandidat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nama Kandidat"
+        android:inputType="textPersonName" />
+
+    <EditText
+        android:id="@+id/etTesTulis"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tes Tulis"
+        android:inputType="number"
+        android:layout_marginTop="12dp" />
+
+    <EditText
+        android:id="@+id/etTesWawancara"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tes Wawancara"
+        android:inputType="number"
+        android:layout_marginTop="12dp" />
+
+    <EditText
+        android:id="@+id/etTesKesehatan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tes Kesehatan"
+        android:inputType="number"
+        android:layout_marginTop="12dp" />
+
+    <EditText
+        android:id="@+id/etTesKeterampilan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tes Keterampilan"
+        android:inputType="number"
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>

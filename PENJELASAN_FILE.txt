@@ -1,0 +1,60 @@
+PENJELASAN STRUKTUR FILE PROJECT SMART RECRUIT (ANDROID STUDIO)
+
+Dokumen ini menjelaskan fungsi dari file-file utama yang digunakan dalam pengembangan fitur Manajemen Kandidat, Penilaian Alternatif, dan Hasil Perhitungan Fuzzy.
+
+I. PACKAGE: com.example.smartrecruit.network (Koneksi API)
+---------------------------------------------------------
+1. ApiService.java:
+   Interface yang mendefinisikan semua "endpoint" API Laravel (seperti GET, POST, PUT, DELETE). Di sini diatur URL untuk mengambil data jabatan, kandidat, alternatif, dan memicu perhitungan fuzzy di server.
+
+2. ApiClient.java:
+   Konfigurasi utama Retrofit. Mengatur Base URL server, timeout koneksi, dan menambahkan Logging Interceptor untuk memantau request/response API di Logcat.
+
+3. ApiResponse.java:
+   Model pembungkus (wrapper) untuk menyamakan format response JSON dari Laravel yang memiliki field 'success', 'message', dan 'data'.
+
+II. PACKAGE: com.example.smartrecruit.activity (Tampilan Layar)
+--------------------------------------------------------------
+1. KandidatDetailActivity.java:
+   Layar utama untuk mengelola kandidat berdasarkan jabatan.
+   - Fitur: Tambah, Edit, Hapus kandidat.
+   - Fitur Penting: Saat menyimpan kandidat, file ini juga otomatis mengirimkan nilai tes (Tulis, Wawancara, dll) ke API Alternatif agar database penilaian terisi secara otomatis.
+
+2. HasilDetailActivity.java:
+   Layar untuk menampilkan peringkat kandidat.
+   - Fitur Penting: Begitu layar dibuka, aplikasi memicu 'hitungFuzzy' di server agar Laravel melakukan perhitungan terbaru. Setelah itu, data peringkat diambil dan ditampilkan.
+
+III. PACKAGE: com.example.smartrecruit.fragments (Bagian Menu Utama)
+------------------------------------------------------------------
+1. KandidatFragment.java:
+   Menampilkan daftar jabatan yang tersedia untuk dikelola kandidatnya. Fragment ini mengambil data dari API 'kandidat/jabatan'.
+
+2. HasilFragment.java:
+   Menampilkan daftar jabatan untuk melihat hasil akhir seleksi.
+
+IV. PACKAGE: com.example.smartrecruit.model (Struktur Data)
+----------------------------------------------------------
+1. Kandidat.java: Menyimpan data profil kandidat dan nilai tes sementara.
+2. Hasil.java: Menyimpan hasil perhitungan akhir dari server (Nilai Akhir & Ranking).
+3. Alternatif.java: Struktur data penilaian untuk setiap kriteria.
+4. Jabatan.java: Data master jabatan.
+
+V. PACKAGE: com.example.smartrecruit.adapter (Penghubung Data ke UI)
+-------------------------------------------------------------------
+1. KandidatDetailAdapter.java: Mengatur bagaimana data kandidat ditampilkan dalam list (CardView) beserta tombol aksi Edit/Hapus.
+
+VI. LAYOUT (XML)
+----------------
+1. activity_hasil_detail.xml: Desain layar hasil akhir yang berisi RecyclerView dan ProgressBar.
+2. item_hasil_rank.xml: Desain setiap baris peringkat (Rank #1, Nama, Jabatan).
+3. item_kandidat_detail.xml: Desain baris data kandidat yang menampilkan nilai-nilai tes secara ringkas.
+
+VII. ALUR SISTEM (FUZZY SUGENO)
+-------------------------------
+1. User Input: Input nilai kandidat di Android.
+2. Alternatif: Nilai tes dikirim ke tabel 'alternatifs' di Laravel.
+3. Perhitungan: Saat buka menu Hasil di Android, API 'perhitungan/hitung' dijalankan di Laravel.
+4. Output: Nilai akhir disimpan ke tabel 'hasils' dan ditampilkan kembali di Android sebagai peringkat.
+
+---------------------------------------------------------
+Dibuat untuk mempermudah pemahaman struktur kode aplikasi SmartRecruit.
