@@ -14,11 +14,11 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.smartrecruit.activity.MainActivity;
 import com.example.smartrecruit.R;
-import com.example.smartrecruit.network.ApiClient;
 import com.example.smartrecruit.model.User;
-import com.example.smartrecruit.response.LoginResponse;
+import com.example.smartrecruit.network.ApiClient;
+import com.example.smartrecruit.network.ApiService;
+import com.example.smartrecruit.network.ApiResponse;
 import com.example.smartrecruit.utils.SessionManager;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -31,7 +31,9 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputEditText etEmail, etPassword;
     private Button btnLogin;
     private ProgressBar progressBar;
+
     private SessionManager sessionManager;
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,29 +41,26 @@ public class LoginActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
 
-        // Apply window insets for edge-to-edge
         ViewCompat.setOnApplyWindowInsetsListener(getWindow().getDecorView(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        // Initialize session manager
         sessionManager = new SessionManager(this);
 
-        // Check if already logged in
         if (sessionManager.isLoggedIn()) {
             navigateToMainActivity();
             return;
         }
 
-        // Initialize views
+        apiService = ApiClient.getApiService();
+
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
         progressBar = findViewById(R.id.progressBar);
 
-        // Set click listener
         btnLogin.setOnClickListener(v -> performLogin());
     }
 
@@ -69,120 +68,94 @@ public class LoginActivity extends AppCompatActivity {
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        // Validation
         if (TextUtils.isEmpty(email)) {
             etEmail.setError("Email tidak boleh kosong");
-            etEmail.requestFocus();
-            return;
-        }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            etEmail.setError("Format email tidak valid");
-            etEmail.requestFocus();
             return;
         }
 
         if (TextUtils.isEmpty(password)) {
             etPassword.setError("Password tidak boleh kosong");
-            etPassword.requestFocus();
             return;
         }
 
-        if (password.length() < 6) {
-            etPassword.setError("Password minimal 6 karakter");
-            etPassword.requestFocus();
-            return;
-        }
-
-        // Show loading
         showLoading(true);
 
-        // Create login request
-        LoginRequest loginRequest = new LoginRequest(email, password);
+        apiService.login(email, password)
+                .enqueue(new Callback<ApiResponse<User>>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse<User>> call,
+                                           Response<ApiResponse<User>> response) {
 
-        // Call API
-        Call<LoginResponse> call = ApiClient.getApiService().login(loginRequest);
-        call.enqueue(new Callback<LoginResponse>() {
-            @Override
-            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-                showLoading(false);
+                        showLoading(false);
 
-                if (response.isSuccessful() && response.body() != null) {
-                    LoginResponse loginResponse = response.body();
+                        if (response.isSuccessful() && response.body() != null) {
 
-                    if (loginResponse.isSuccess()) {
-                        // Save session
-                        sessionManager.createLoginSession(
-                                loginResponse.getToken(),
-                                loginResponse.getData().getId(),
-                                loginResponse.getData().getName(),
-                                loginResponse.getData().getEmail()
-                        );
+                            ApiResponse<User> apiResponse = response.body();
 
-                        Toast.makeText(LoginActivity.this,
-                                "Selamat datang, " + loginResponse.getData().getName() + "!",
-                                Toast.LENGTH_SHORT).show();
+                            if (apiResponse.success && apiResponse.data != null) {
 
-                        // Navigate to main activity
-                        navigateToMainActivity();
-                    } else {
-                        Toast.makeText(LoginActivity.this,
-                                loginResponse.getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                                User user = apiResponse.data;
+
+                                sessionManager.createLoginSession(
+                                        user.token,
+                                        user.user_id,
+                                        user.name,
+                                        user.email
+                                );
+
+                                Toast.makeText(
+                                        LoginActivity.this,
+                                        "Selamat datang, " + user.name,
+                                        Toast.LENGTH_SHORT
+                                ).show();
+
+                                navigateToMainActivity();
+
+                            } else {
+                                Toast.makeText(
+                                        LoginActivity.this,
+                                        apiResponse.message,
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                            }
+
+                        } else if (response.code() == 401) {
+                            Toast.makeText(
+                                    LoginActivity.this,
+                                    "Email atau password salah",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        } else {
+                            Toast.makeText(
+                                    LoginActivity.this,
+                                    "Login gagal",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
                     }
-                } else {
-                    // Handle error response
-                    String errorMessage = "Login gagal. Silakan coba lagi.";
-                    if (response.code() == 401) {
-                        errorMessage = "Email atau password salah";
-                    } else if (response.code() == 422) {
-                        errorMessage = "Data tidak valid. Periksa inputan Anda.";
-                    } else if (response.code() >= 500) {
-                        errorMessage = "Server error. Silakan coba lagi nanti.";
+
+                    @Override
+                    public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
+                        showLoading(false);
+                        Toast.makeText(
+                                LoginActivity.this,
+                                "Koneksi gagal: " + t.getMessage(),
+                                Toast.LENGTH_LONG
+                        ).show();
                     }
-                    Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<LoginResponse> call, Throwable t) {
-                showLoading(false);
-                String errorMessage = "Error koneksi: " + t.getMessage();
-
-                // Handle specific errors
-                if (t instanceof java.net.UnknownHostException) {
-                    errorMessage = "Tidak ada koneksi internet. Periksa jaringan Anda.";
-                } else if (t instanceof java.net.SocketTimeoutException) {
-                    errorMessage = "Koneksi timeout. Silakan coba lagi.";
-                }
-
-                Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-            }
-        });
+                });
     }
 
     private void showLoading(boolean show) {
-        if (show) {
-            progressBar.setVisibility(View.VISIBLE);
-            btnLogin.setEnabled(false);
-            btnLogin.setAlpha(0.5f);
-        } else {
-            progressBar.setVisibility(View.GONE);
-            btnLogin.setEnabled(true);
-            btnLogin.setAlpha(1f);
-        }
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        btnLogin.setEnabled(!show);
+        btnLogin.setAlpha(show ? 0.5f : 1f);
     }
 
     private void navigateToMainActivity() {
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        finish();
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
         finish();
     }
 }

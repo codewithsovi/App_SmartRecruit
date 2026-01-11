@@ -2,16 +2,16 @@ package com.example.smartrecruit.model;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Hasil {
+public class Alternatif {
     @SerializedName("id")
     public int id;
 
     @SerializedName("kandidat_id")
     public int kandidatId;
 
-    @SerializedName("nilai_akhir")
-    public double nilaiAkhir;
+    @SerializedName("kriteria_id")
+    public int kriteriaId;
 
-    @SerializedName("kandidat")
-    public Kandidat kandidat;
+    @SerializedName("bobot")
+    public double bobot;
 }

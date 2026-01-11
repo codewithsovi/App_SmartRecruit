@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F7FA">
+
+    <!-- Header -->
+    <TextView
+        android:id="@+id/tvHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Data Kandidat"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#4A6CF7"
+        android:padding="16dp"
+        android:layout_alignParentTop="true"/>
+
+    <!-- RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvKandidat"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/tvHeader"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"/>
+
+</RelativeLayout>
